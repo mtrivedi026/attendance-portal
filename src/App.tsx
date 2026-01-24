@@ -16,7 +16,7 @@ function App() {
     e.preventDefault();
 
     try {
-      const response = await fetch("http://localhost:5000/attendance", {
+      const response = await fetch("https://attendance-backend-29ve.onrender.com", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -83,3 +83,6 @@ function App() {
 }
 
 export default App;
+
+
+
