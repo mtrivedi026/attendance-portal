@@ -1,39 +1,38 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+require("dotenv").config();
 
 const Attendance = require("./models/Attendance");
 
 const app = express();
 
-/* ======================
-   MIDDLEWARE
-====================== */
+/* =======================
+   MIDDLEWARES
+======================= */
 app.use(cors());
 app.use(express.json());
 
-/* ======================
-   MONGODB CONNECTION
-====================== */
-mongoose
-  .connect("mongodb://127.0.0.1:27017/attendance")
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ Mongo Error:", err));
-
-/* ======================
-   TEST ROUTE
-====================== */
+/* =======================
+   ROOT ROUTE (IMPORTANT)
+======================= */
 app.get("/", (req, res) => {
   res.send("Attendance Server Running");
 });
 
-/* ======================
+/* =======================
    POST ATTENDANCE
-   (NAME + DATE UNIQUE)
-====================== */
+   (Duplicate block handled by Mongo unique index)
+======================= */
 app.post("/attendance", async (req, res) => {
   try {
     const { employeeName, status, date } = req.body;
+
+    if (!employeeName || !status || !date) {
+      return res.status(400).json({
+        message: "All fields are required"
+      });
+    }
 
     const record = new Attendance({
       employeeName,
@@ -43,39 +42,40 @@ app.post("/attendance", async (req, res) => {
 
     await record.save();
 
-    res.status(201).json({ message: "Attendance saved" });
+    res.status(201).json({
+      message: "✅ Attendance saved"
+    });
 
   } catch (error) {
-    // Duplicate name + date
+    // Duplicate entry error
     if (error.code === 11000) {
       return res.status(400).json({
         message: "❌ Attendance already marked for this date"
       });
     }
 
+    console.error(error);
     res.status(500).json({
-      message: "Server error",
-      error
+      message: "❌ Server error"
     });
   }
 });
 
-/* ======================
+/* =======================
    GET ALL ATTENDANCE
-====================== */
+======================= */
 app.get("/attendance", async (req, res) => {
   try {
     const data = await Attendance.find().sort({ date: -1 });
     res.json(data);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-/* ======================
+/* =======================
    MONTHLY REPORT
-   (PRESENT COUNT)
-====================== */
+======================= */
 app.get("/report/:month", async (req, res) => {
   try {
     const month = req.params.month; // YYYY-MM
@@ -97,13 +97,23 @@ app.get("/report/:month", async (req, res) => {
 
     res.json(report);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-/* ======================
-   SERVER START
-====================== */
-app.listen(5000, () => {
-  console.log("🚀 Server running on http://localhost:5000");
-});
+/* =======================
+   DATABASE + SERVER START
+======================= */
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err);
+  });

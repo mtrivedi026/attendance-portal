@@ -1,26 +1,22 @@
 const mongoose = require("mongoose");
 
-const attendanceSchema = new mongoose.Schema(
-  {
-    employeeName: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    status: {
-      type: String,
-      enum: ["Present", "Absent"],
-      required: true
-    },
-    date: {
-      type: String,
-      required: true
-    }
+const attendanceSchema = new mongoose.Schema({
+  employeeName: {
+    type: String,
+    required: true
   },
-  { timestamps: true }
-);
+  status: {
+    type: String,
+    enum: ["Present", "Absent"],
+    required: true
+  },
+  date: {
+    type: String,
+    required: true
+  }
+});
 
-// ✅ SAME NAME + SAME DATE DUPLICATE BLOCK
+// 🔒 Duplicate block: same employee + same date
 attendanceSchema.index(
   { employeeName: 1, date: 1 },
   { unique: true }
