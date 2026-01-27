@@ -5,31 +5,20 @@ import cors from "cors";
 const app = express();
 
 /* =========================
-   ✅ CORS CONFIG (FINAL)
+   ✅ CORS (OPEN – FINAL FIX)
    ========================= */
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173", // local frontend
-      "https://attendance-portal-three.vercel.app" // vercel frontend
-    ],
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
-  })
-);
-
-// ✅ Preflight request fix (MOST IMPORTANT)
-app.options("*", cors());
+app.use(cors());           // 👈 THIS IS THE KEY
+app.options("*", cors());  // 👈 preflight fix
 
 app.use(express.json());
 
 /* =========================
-   ✅ MONGODB CONNECT
+   ✅ MONGODB
    ========================= */
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error("MongoDB error:", err));
+  .catch((err) => console.error(err));
 
 /* =========================
    ✅ SCHEMA
@@ -45,13 +34,10 @@ const Attendance = mongoose.model("Attendance", AttendanceSchema);
 /* =========================
    ✅ ROUTES
    ========================= */
-
-// Root test route
 app.get("/", (req, res) => {
   res.send("Attendance API Running");
 });
 
-// Attendance route
 app.post("/attendance", async (req, res) => {
   try {
     const { employeeId, date, status } = req.body;
@@ -61,19 +47,16 @@ app.post("/attendance", async (req, res) => {
     }
 
     await Attendance.create({ employeeId, date, status });
-
     res.json({ success: true });
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
     res.status(500).json({ error: "Server error" });
   }
 });
 
 /* =========================
-   ✅ SERVER START
+   ✅ SERVER
    ========================= */
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
   console.log("Server running on port", PORT);
 });
