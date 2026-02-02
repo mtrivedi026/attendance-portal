@@ -1,88 +1,32 @@
 import { useState } from "react";
-import type { FormEvent } from "react";
-
-
-type AttendanceResponse = {
-  message: string;
-};
+import Attendance from "./attendance";
 
 function App() {
-  const [employeeName, setEmployeeName] = useState<string>("");
-  const [status, setStatus] = useState<string>("Present");
-  const [date, setDate] = useState<string>("");
-  const [message, setMessage] = useState<string>("");
+  const [user, setUser] = useState<string | null>(
+    localStorage.getItem("employeeId")
+  );
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleLogin = () => {
+    const employeeId = prompt("Enter Employee ID");
 
-    try {
-      const response = await fetch("https://attendance-backend-29ve.onrender.com", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          employeeName,
-          status,
-          date
-        })
-      });
-
-      const data: AttendanceResponse = await response.json();
-      setMessage(data.message);
-
-      // reset form
-      setEmployeeName("");
-      setStatus("Present");
-      setDate("");
-    } catch (error) {
-      setMessage("❌ Server error");
+    if (employeeId) {
+      localStorage.setItem("employeeId", employeeId);
+      setUser(employeeId);
     }
   };
 
   return (
-    <div style={{ padding: 30 }}>
-      <h2>Daily Attendance</h2>
-
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Employee Name"
-          value={employeeName}
-          onChange={(e) => setEmployeeName(e.target.value)}
-          required
-        />
-
-        <br /><br />
-
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-        >
-          <option value="Present">Present</option>
-          <option value="Absent">Absent</option>
-        </select>
-
-        <br /><br />
-
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
-
-        <br /><br />
-
-        <button type="submit">Submit Attendance</button>
-      </form>
-
-      {message && <p>{message}</p>}
+    <div style={{ padding: "20px" }}>
+      {user ? (
+        <Attendance setUser={setUser} />
+      ) : (
+        <>
+          <h2>Employee Login</h2>
+          <button onClick={handleLogin}>Login</button>
+        </>
+      )}
     </div>
   );
 }
 
 export default App;
-
-
-

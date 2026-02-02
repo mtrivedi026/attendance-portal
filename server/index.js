@@ -5,58 +5,94 @@ import cors from "cors";
 const app = express();
 
 /* =========================
-   ✅ CORS (OPEN – FINAL FIX)
+   ✅ CORS CONFIG (FIXED)
    ========================= */
-app.use(cors());           // 👈 THIS IS THE KEY
-app.options("*", cors());  // 👈 preflight fix
+app.use(
+  cors({
+    origin: "http://localhost:5173", // frontend
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
 
+/* =========================
+   Body Parser
+   ========================= */
 app.use(express.json());
 
 /* =========================
-   ✅ MONGODB
+   MongoDB Connection
    ========================= */
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error(err));
+  .catch((err) => console.error("MongoDB error:", err));
 
 /* =========================
-   ✅ SCHEMA
+   Schema
    ========================= */
 const AttendanceSchema = new mongoose.Schema({
-  employeeId: String,
-  date: String,
-  status: String,
+  employeeId: {
+    type: String,
+    required: true,
+  },
+  date: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ["Present", "Absent"],
+  },
 });
 
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 
 /* =========================
-   ✅ ROUTES
+   Routes
    ========================= */
+
+// Health check
 app.get("/", (req, res) => {
-  res.send("Attendance API Running");
+  res.send("✅ Attendance API Running");
 });
 
+// Mark attendance
 app.post("/attendance", async (req, res) => {
   try {
     const { employeeId, date, status } = req.body;
 
     if (!employeeId || !date || !status) {
-      return res.status(400).json({ error: "Missing fields" });
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
     }
 
-    await Attendance.create({ employeeId, date, status });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
+    await Attendance.create({
+      employeeId,
+      date,
+      status,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Attendance marked successfully",
+    });
+  } catch (error) {
+    console.error("Attendance error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 });
 
 /* =========================
-   ✅ SERVER
+   Server Start
    ========================= */
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
+  console.log(`🚀 Server running on port ${PORT}`);
 });

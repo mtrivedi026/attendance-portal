@@ -4,25 +4,33 @@ type Props = {
 
 function Attendance({ setUser }: Props) {
   const employeeId = localStorage.getItem("employeeId");
-  const today = new Date().toLocaleDateString();
+  const today = new Date().toISOString().split("T")[0];
 
   const markAttendance = async (status: string) => {
     try {
-      await fetch("http://localhost:5000/attendance", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          employeeId,
-          date: today,
-          status,
-        }),
-      });
+      const response = await fetch(
+        "https://attendance-backend-29ve.onrender.com/attendance",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            employeeId,
+            date: today,
+            status,
+          }),
+        }
+      );
 
-      alert(`Attendance marked: ${status}`);
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+
+      alert(`Attendance marked: ${status} ✅`);
     } catch (error) {
-      alert("Server not running");
+      console.error(error);
+      alert("Server error ❌");
     }
   };
 
