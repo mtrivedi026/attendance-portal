@@ -5,9 +5,18 @@ import cors from "cors";
 const app = express();
 
 /* =========================
-   ✅ SIMPLE CORS (NO BLOCK)
+   🔥 CORS — FINAL & SAFE
    ========================= */
-app.use(cors()); // 🔥 allow all origins
+app.use(cors({
+  origin: "*",                 // allow all (testing)
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+}));
+
+// 👇 VERY IMPORTANT: preflight support
+app.options("*", cors());
+
+// body parser (AFTER cors)
 app.use(express.json());
 
 /* =========================
