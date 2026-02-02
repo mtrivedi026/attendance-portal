@@ -5,18 +5,23 @@ import cors from "cors";
 const app = express();
 
 /* =========================
-   🔥 CORS — FINAL & SAFE
+   ✅ FINAL CORS (VERCEL FIX)
    ========================= */
-app.use(cors({
-  origin: "*",                 // allow all (testing)
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
-}));
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://attendance-portal-three.vercel.app",
+      "https://attendance-portal-gchhm8x61-mohits-projects-76612df3.vercel.app",
+    ],
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
 
-// 👇 VERY IMPORTANT: preflight support
+// preflight support
 app.options("*", cors());
 
-// body parser (AFTER cors)
 app.use(express.json());
 
 /* =========================
@@ -48,9 +53,7 @@ app.get("/", (req, res) => {
 app.post("/attendance", async (req, res) => {
   try {
     const { employeeId, date, status } = req.body;
-
     await Attendance.create({ employeeId, date, status });
-
     res.json({ success: true });
   } catch (err) {
     console.error(err);
